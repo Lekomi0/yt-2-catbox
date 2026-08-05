@@ -1,17 +1,29 @@
 FROM python:3.11-slim
 
-# Устанавливаем FFmpeg и curl (для проверки)
-RUN apt-get update && apt-get install -y ffmpeg curl && rm -rf /var/lib/apt/lists/*
+# Устанавливаем системные зависимости: git, python, iptables, ffmpeg и др.
+RUN apt-get update && apt-get install -y \
+    git \
+    python3 \
+    iptables \
+    iproute2 \
+    net-tools \
+    curl \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 
-# Копируем и устанавливаем зависимости Python
+# Клонируем официальный репозиторий zapret-discord-youtube
+WORKDIR /opt
+RUN git clone https://github.com/Flowseal/zapret-discord-youtube.git zapret
+
+# Устанавливаем права на выполнение (если нужно)
+RUN chmod +x /opt/zapret/zapret.py
+
+# Рабочая папка для приложения
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
-# Устанавливаем zapret из готового образа
-COPY --from=pirst/zsylx:latest /opt/zapret /opt/zapret
-COPY --from=pirst/zsylx:latest /usr/local/bin/zapret /usr/local/bin/zapret
+# Устанавливаем Python-зависимости
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Запускаем zapret в фоне и Flask-приложение
-CMD bash -c "zapret --daemon --mode=1 --port=1080 && python app.py"
+# Запускаем zapret в фоне (режим 1, порт 1080) и затем Flask-приложение
+CMD bash -c "cd /opt/zapret && python zapret.py --mode=1 --port=1080 & sleep 3 && cd /app && python app.py"
