@@ -200,8 +200,9 @@
     });
 
     // ===== АВТО-ДЕКОР: картинки берутся из img/images.json =====
-    // рандомная позиция по всей странице, но с проверкой,
-    // чтобы не залезать на рабочую область (карточку с формой)
+    // делим экран на сетку ячеек, исключаем ячейки над рабочей областью,
+    // и раскидываем картинки по одной на случайную ячейку — так они не
+    // слипаются в кучку, а равномерно покрывают всю страницу
     function getForbiddenRect() {
         const el = document.querySelector('.page');
         const r = el.getBoundingClientRect();
@@ -209,24 +210,35 @@
         return { left: r.left - pad, right: r.right + pad, top: r.top - pad, bottom: r.bottom + pad };
     }
 
-    function randomPosition(size, forbidden, maxAttempts) {
+    function shuffle(arr) {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    function buildGrid(count, forbidden) {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
-        for (let i = 0; i < maxAttempts; i++) {
-            const x = Math.random() * Math.max(vw - size, 0);
-            const y = Math.random() * Math.max(vh - size, 0);
-            const overlaps = !(
-                x + size < forbidden.left ||
-                x > forbidden.right ||
-                y + size < forbidden.top ||
-                y > forbidden.bottom
-            );
-            if (!overlaps) return { x, y };
+        // подбираем сетку так, чтобы ячеек хватало с запасом на все картинки
+        const targetCells = Math.max(count * 2, 12);
+        const cols = Math.max(3, Math.round(Math.sqrt(targetCells * (vw / vh))));
+        const rows = Math.max(3, Math.ceil(targetCells / cols));
+        const cellW = vw / cols;
+        const cellH = vh / rows;
+
+        const cells = [];
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                const x0 = c * cellW, y0 = r * cellH;
+                const x1 = x0 + cellW, y1 = y0 + cellH;
+                const overlaps = !(x1 < forbidden.left || x0 > forbidden.right || y1 < forbidden.top || y0 > forbidden.bottom);
+                if (!overlaps) cells.push({ x0, y0, w: cellW, h: cellH });
+            }
         }
-        // если за maxAttempts не нашли свободное место — кидаем к краю экрана
-        const x = Math.random() < 0.5 ? 4 : vw - size - 4;
-        const y = Math.random() * Math.max(vh - size, 0);
-        return { x, y };
+        return cells;
     }
 
     async function loadDecorations() {
@@ -237,19 +249,28 @@
             if (!Array.isArray(files) || files.length === 0) return;
 
             const forbidden = getForbiddenRect();
+            let cells = shuffle(buildGrid(files.length, forbidden));
             const anims = ['float', 'spin'];
 
             files.forEach((filename, i) => {
+                if (cells.length === 0) cells = shuffle(buildGrid(files.length, forbidden));
+                const cell = cells.pop();
+
                 const size = 55 + Math.round(Math.random() * 45);
-                const pos = randomPosition(size, forbidden, 40);
+                const padIn = 6;
+                const maxX = Math.max(cell.w - size - padIn * 2, 0);
+                const maxY = Math.max(cell.h - size - padIn * 2, 0);
+                const x = cell.x0 + padIn + Math.random() * maxX;
+                const y = cell.y0 + padIn + Math.random() * maxY;
+
                 const img = document.createElement('img');
                 img.src = 'img/' + filename;
                 img.alt = '';
                 img.className = 'deco ' + anims[i % anims.length];
                 img.style.width = size + 'px';
                 img.style.setProperty('--r', (Math.random() * 24 - 12) + 'deg');
-                img.style.left = pos.x + 'px';
-                img.style.top = pos.y + 'px';
+                img.style.left = x + 'px';
+                img.style.top = y + 'px';
                 document.body.appendChild(img);
             });
         } catch (e) {
