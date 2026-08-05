@@ -4,10 +4,12 @@ import subprocess
 import os
 import requests
 import uuid
-import time
 
 app = Flask(__name__)
 CORS(app)
+
+# Твой прокси (HTTP)
+PROXY = "http://173.212.245.136:8888"
 
 @app.route('/download', methods=['GET', 'OPTIONS'])
 def download():
@@ -21,18 +23,17 @@ def download():
     filename = f"audio_{uuid.uuid4().hex}.mp3"
 
     try:
-        # Прямой вызов yt-dlp
         cmd = [
             "yt-dlp",
+            "--proxy", PROXY,
             "-x", "--audio-format", "mp3",
-            "--audio-quality", "0",  # лучшее качество
+            "--audio-quality", "0",
             "--extractor-args", "youtube:player-client=web,default",
             "-o", filename,
             url
         ]
-        subprocess.run(cmd, check=True, timeout=180)
+        subprocess.run(cmd, check=True, timeout=300)
 
-        # Загружаем на Catbox
         with open(filename, 'rb') as f:
             upload_resp = requests.post(
                 'https://catbox.moe/user/api.php',
