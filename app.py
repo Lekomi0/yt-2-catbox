@@ -1,13 +1,10 @@
 from flask import Flask, request, jsonify
 import requests
-from bs4 import BeautifulSoup
 import uuid
 import os
-import re
+import time
 
 app = Flask(__name__)
-
-CONVERTER_URL = "https://media.ytmp3.gg/tools/youtube-to-mp3-320kbps-converter/"
 
 @app.route('/download', methods=['GET'])
 def download():
@@ -16,62 +13,70 @@ def download():
         return jsonify({'error': 'Missing url parameter'}), 400
 
     try:
-        # 1. Отправляем запрос к конвертеру
-        response = requests.post(
-            CONVERTER_URL,
-            data={'url': url},
-            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-        )
-        if response.status_code != 200:
-            return jsonify({'error': f'Converter error {response.status_code}'}), 500
+        # 1. Запускаем конвертацию
+        headers = {
+            'accept': 'application/json',
+            'content-type': 'application/json',
+            'origin': 'https://media.ytmp3.gg',
+            'referer': 'https://media.ytmp3.gg/',
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36'
+        }
+        payload = {
+            "url": url,
+            "os": "windows",
+            "output": {"type": "audio", "format": "mp3"},
+            "audio": {"bitrate": "128k"}
+        }
+        resp = requests.post('https://hub.convert1s.com/api/download', json=payload, headers=headers)
+        if resp.status_code != 200:
+            return jsonify({'error': f'Convert API error: {resp.status_code}'}), 500
 
-        html = response.text
-        download_link = None  # <-- ИНИЦИАЛИЗАЦИЯ
+        data = resp.json()
+        status_url = data.get('statusUrl')
+        if not status_url:
+            return jsonify({'error': 'No statusUrl in response'}), 500
 
-        # 2. Ищем ссылку по паттерну (из твоего F12)
-        pattern = r'https://vps-[^/]+\.mnmnmnmnmnnm\.site/files/[^/]+/output\.mp3\?token=[^&\s]+&expires=\d+'
-        match = re.search(pattern, html)
-        if match:
-            download_link = match.group(0)
-        else:
-            # Если не нашлось — ищем в <a> с .mp3
-            soup = BeautifulSoup(html, 'html.parser')
-            for a in soup.find_all('a', href=True):
-                if '.mp3' in a['href']:
-                    download_link = a['href']
-                    if download_link.startswith('/'):
-                        download_link = 'https://media.ytmp3.gg' + download_link
-                    break
-            else:
-                # Ищем в скриптах
-                for script in soup.find_all('script'):
-                    if script.string:
-                        match = re.search(pattern, script.string)
-                        if match:
-                            download_link = match.group(0)
-                            break
+        # 2. Опрашиваем статус
+        max_attempts = 30
+        download_link = None
+        for _ in range(max_attempts):
+            time.sleep(2)
+            status_resp = requests.get(status_url, headers={'user-agent': headers['user-agent']})
+            if status_resp.status_code != 200:
+                continue
+            status_data = status_resp.json()
+            # Проверяем, есть ли поле 'downloadUrl' или 'url'
+            if 'downloadUrl' in status_data and status_data['downloadUrl']:
+                download_link = status_data['downloadUrl']
+                break
+            elif 'url' in status_data and status_data['url']:
+                download_link = status_data['url']
+                break
+            # Если статус явно говорит об ошибке
+            if status_data.get('status') == 'error' or status_data.get('state') == 'error':
+                return jsonify({'error': 'Conversion failed on server'}), 500
 
         if not download_link:
-            return jsonify({'error': 'Could not extract MP3 link'}), 500
+            return jsonify({'error': 'Conversion timeout or no download link'}), 500
 
         # 3. Скачиваем MP3
-        mp3_response = requests.get(download_link, stream=True, headers={'User-Agent': 'Mozilla/5.0'})
-        if mp3_response.status_code != 200:
+        mp3_resp = requests.get(download_link, stream=True, headers={'user-agent': headers['user-agent']})
+        if mp3_resp.status_code != 200:
             return jsonify({'error': 'Failed to download MP3'}), 500
 
         filename = f"audio_{uuid.uuid4().hex}.mp3"
         with open(filename, 'wb') as f:
-            for chunk in mp3_response.iter_content(chunk_size=8192):
+            for chunk in mp3_resp.iter_content(chunk_size=8192):
                 f.write(chunk)
 
         # 4. Загружаем на Catbox
         with open(filename, 'rb') as f:
-            upload_response = requests.post(
+            upload_resp = requests.post(
                 'https://catbox.moe/user/api.php',
                 data={'reqtype': 'fileupload'},
                 files={'fileToUpload': f}
             )
-        direct_link = upload_response.text.strip()
+        direct_link = upload_resp.text.strip()
         os.remove(filename)
 
         return jsonify({'link': direct_link})
