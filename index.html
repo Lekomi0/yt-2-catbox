@@ -25,7 +25,35 @@
         .page {
             max-width: 620px;
             width: 100%;
+            position: relative;
         }
+
+        .deco {
+            position: absolute;
+            pointer-events: none;
+            z-index: 0;
+            filter: drop-shadow(2px 3px 0 rgba(0,0,0,0.35));
+        }
+        @keyframes floaty {
+            0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+            50% { transform: translateY(-12px) rotate(var(--r, 0deg)); }
+        }
+        @keyframes spinny { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .float { animation: floaty 3.2s ease-in-out infinite; }
+        .spin { animation: spinny 5s linear infinite; }
+
+        .deco.smoke   { top: -34px;  left: -40px;  width: 70px; --r: -8deg; }
+        .deco.puzzle  { top: -30px;  right: -36px; width: 60px; --r: 10deg; }
+        .deco.pikachu { top: 40%;    left: -46px;  width: 75px; }
+        .deco.biohazard { top: 60%;  right: -42px; width: 55px; }
+        .deco.pony    { bottom: -30px; right: -30px; width: 70px; --r: -6deg; }
+        .deco.fist    { bottom: -30px; left: -34px;  width: 55px; }
+        .deco.butterfly { top: 18%;  right: -50px;  width: 65px; }
+        .deco.lekomi  { top: 75%;    left: -48px;   width: 90px; }
+        .deco.cool    { bottom: -46px; left: 38%;    width: 100px; }
+        .deco.sonic   { top: -40px;  left: 40%;      width: 75px; }
+
+        @media (max-width: 760px) { .deco { display: none; } }
 
         .chrome-sub {
             text-align: center;
@@ -146,6 +174,17 @@
 </head>
 <body>
 <div class="page">
+
+    <img class="deco smoke float" src="img/smoke_emoji.png" alt="">
+    <img class="deco puzzle spin" src="img/puzzle.png" alt="">
+    <img class="deco pikachu float" src="img/pikachu.gif" alt="">
+    <img class="deco biohazard spin" src="img/biohazard.gif" alt="">
+    <img class="deco pony float" src="img/pony.png" alt="">
+    <img class="deco fist float" src="img/fist.jpg" alt="">
+    <img class="deco butterfly float" src="img/butterfly.gif" alt="">
+    <img class="deco lekomi float" src="img/lekomi.gif" alt="">
+    <img class="deco cool float" src="img/cool.png" alt="">
+    <img class="deco sonic float" src="img/sonic.png" alt="">
 
     <div class="chrome-sub">youtube → mp3 direct link</div>
 
