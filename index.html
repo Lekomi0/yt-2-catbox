@@ -199,33 +199,33 @@
     });
 
     // ===== АВТО-ДЕКОР: картинки берутся из img/images.json =====
-    // "безопасные" места вокруг карточки, чтобы не перекрывать текст
-    const decoSlots = [
-        { top: '3%',  left: '4%' },
-        { top: '3%',  right: '4%' },
-        { top: '3%',  left: '42%' },
-        { top: '18%', left: '1%' },
-        { top: '18%', right: '1%' },
-        { top: '38%', left: '2%' },
-        { top: '38%', right: '2%' },
-        { top: '58%', left: '1%' },
-        { top: '58%', right: '1%' },
-        { top: '75%', left: '3%' },
-        { top: '75%', right: '3%' },
-        { bottom: '3%', left: '5%' },
-        { bottom: '3%', right: '5%' },
-        { bottom: '3%', left: '40%' },
-        { top: '48%', left: '3%' },
-        { top: '48%', right: '3%' }
-    ];
+    // рандомная позиция по всей странице, но с проверкой,
+    // чтобы не залезать на рабочую область (карточку с формой)
+    function getForbiddenRect() {
+        const el = document.querySelector('.page');
+        const r = el.getBoundingClientRect();
+        const pad = 24; // отступ вокруг рабочей области
+        return { left: r.left - pad, right: r.right + pad, top: r.top - pad, bottom: r.bottom + pad };
+    }
 
-    function shuffle(arr) {
-        const a = arr.slice();
-        for (let i = a.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [a[i], a[j]] = [a[j], a[i]];
+    function randomPosition(size, forbidden, maxAttempts) {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        for (let i = 0; i < maxAttempts; i++) {
+            const x = Math.random() * Math.max(vw - size, 0);
+            const y = Math.random() * Math.max(vh - size, 0);
+            const overlaps = !(
+                x + size < forbidden.left ||
+                x > forbidden.right ||
+                y + size < forbidden.top ||
+                y > forbidden.bottom
+            );
+            if (!overlaps) return { x, y };
         }
-        return a;
+        // если за maxAttempts не нашли свободное место — кидаем к краю экрана
+        const x = Math.random() < 0.5 ? 4 : vw - size - 4;
+        const y = Math.random() * Math.max(vh - size, 0);
+        return { x, y };
     }
 
     async function loadDecorations() {
@@ -235,28 +235,27 @@
             const files = await res.json();
             if (!Array.isArray(files) || files.length === 0) return;
 
-            const slots = shuffle(decoSlots);
+            const forbidden = getForbiddenRect();
             const anims = ['float', 'spin'];
 
             files.forEach((filename, i) => {
-                const slot = slots[i % slots.length];
+                const size = 55 + Math.round(Math.random() * 45);
+                const pos = randomPosition(size, forbidden, 40);
                 const img = document.createElement('img');
                 img.src = 'img/' + filename;
                 img.alt = '';
                 img.className = 'deco ' + anims[i % anims.length];
-                img.style.width = (55 + Math.round(Math.random() * 45)) + 'px';
+                img.style.width = size + 'px';
                 img.style.setProperty('--r', (Math.random() * 24 - 12) + 'deg');
-                if (slot.top) img.style.top = slot.top;
-                if (slot.bottom) img.style.bottom = slot.bottom;
-                if (slot.left) img.style.left = slot.left;
-                if (slot.right) img.style.right = slot.right;
+                img.style.left = pos.x + 'px';
+                img.style.top = pos.y + 'px';
                 document.body.appendChild(img);
             });
         } catch (e) {
             // если images.json не найден — просто без декора
         }
     }
-    loadDecorations();
+    window.addEventListener('load', loadDecorations);
     // ===== конец авто-декора =====
 
     async function process() {
