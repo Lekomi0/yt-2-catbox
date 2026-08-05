@@ -1,19 +1,23 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS  # <-- НОВЫЙ ИМПОРТ
 import requests
 import uuid
 import os
 import time
 
 app = Flask(__name__)
+CORS(app)  # <-- РАЗРЕШАЕТ ЗАПРОСЫ С ЛЮБОГО ДОМЕНА
 
-@app.route('/download', methods=['GET'])
+@app.route('/download', methods=['GET', 'OPTIONS'])
 def download():
+    if request.method == 'OPTIONS':
+        return '', 200
+
     url = request.args.get('url')
     if not url:
         return jsonify({'error': 'Missing url parameter'}), 400
 
     try:
-        # 1. Запускаем конвертацию
         headers = {
             'accept': 'application/json',
             'content-type': 'application/json',
@@ -36,7 +40,6 @@ def download():
         if not status_url:
             return jsonify({'error': 'No statusUrl in response'}), 500
 
-        # 2. Опрашиваем статус
         max_attempts = 30
         download_link = None
         for _ in range(max_attempts):
@@ -45,21 +48,18 @@ def download():
             if status_resp.status_code != 200:
                 continue
             status_data = status_resp.json()
-            # Проверяем, есть ли поле 'downloadUrl' или 'url'
             if 'downloadUrl' in status_data and status_data['downloadUrl']:
                 download_link = status_data['downloadUrl']
                 break
             elif 'url' in status_data and status_data['url']:
                 download_link = status_data['url']
                 break
-            # Если статус явно говорит об ошибке
             if status_data.get('status') == 'error' or status_data.get('state') == 'error':
                 return jsonify({'error': 'Conversion failed on server'}), 500
 
         if not download_link:
             return jsonify({'error': 'Conversion timeout or no download link'}), 500
 
-        # 3. Скачиваем MP3
         mp3_resp = requests.get(download_link, stream=True, headers={'user-agent': headers['user-agent']})
         if mp3_resp.status_code != 200:
             return jsonify({'error': 'Failed to download MP3'}), 500
@@ -69,7 +69,6 @@ def download():
             for chunk in mp3_resp.iter_content(chunk_size=8192):
                 f.write(chunk)
 
-        # 4. Загружаем на Catbox
         with open(filename, 'rb') as f:
             upload_resp = requests.post(
                 'https://catbox.moe/user/api.php',
