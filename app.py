@@ -28,7 +28,7 @@ def download():
             "-x",
             "--audio-format", "mp3",
             "--audio-quality", "0",
-            "--extractor-args", "youtube:player-client=android",  # добавляем обход
+            "--extractor-args", "youtube:player-client=web,default",  # добавляем обход
             "-o", filename,
             url
         ]
