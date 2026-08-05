@@ -29,7 +29,7 @@ def download():
             "url": url,
             "os": "windows",
             "output": {"type": "audio", "format": "mp3"},
-            "audio": {"bitrate": "128k"}
+            "audio": {"bitrate": "320k"}
         }
         resp = requests.post('https://hub.convert1s.com/api/download', json=payload, headers=headers)
         if resp.status_code != 200:
