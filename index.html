@@ -29,7 +29,7 @@
         }
 
         .deco {
-            position: absolute;
+            position: fixed;
             pointer-events: none;
             z-index: 0;
             filter: drop-shadow(2px 3px 0 rgba(0,0,0,0.35));
@@ -41,17 +41,6 @@
         @keyframes spinny { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .float { animation: floaty 3.2s ease-in-out infinite; }
         .spin { animation: spinny 5s linear infinite; }
-
-        .deco.smoke   { top: -34px;  left: -40px;  width: 70px; --r: -8deg; }
-        .deco.puzzle  { top: -30px;  right: -36px; width: 60px; --r: 10deg; }
-        .deco.pikachu { top: 40%;    left: -46px;  width: 75px; }
-        .deco.biohazard { top: 60%;  right: -42px; width: 55px; }
-        .deco.pony    { bottom: -30px; right: -30px; width: 70px; --r: -6deg; }
-        .deco.fist    { bottom: -30px; left: -34px;  width: 55px; }
-        .deco.butterfly { top: 18%;  right: -50px;  width: 65px; }
-        .deco.lekomi  { top: 75%;    left: -48px;   width: 90px; }
-        .deco.cool    { bottom: -46px; left: 38%;    width: 100px; }
-        .deco.sonic   { top: -40px;  left: 40%;      width: 75px; }
 
         @media (max-width: 760px) { .deco { display: none; } }
 
@@ -175,17 +164,6 @@
 <body>
 <div class="page">
 
-    <img class="deco smoke float" src="img/smoke_emoji.png" alt="">
-    <img class="deco puzzle spin" src="img/puzzle.png" alt="">
-    <img class="deco pikachu float" src="img/pikachu.gif" alt="">
-    <img class="deco biohazard spin" src="img/biohazard.gif" alt="">
-    <img class="deco pony float" src="img/pony.png" alt="">
-    <img class="deco fist float" src="img/fist.jpg" alt="">
-    <img class="deco butterfly float" src="img/butterfly.gif" alt="">
-    <img class="deco lekomi float" src="img/lekomi.gif" alt="">
-    <img class="deco cool float" src="img/cool.png" alt="">
-    <img class="deco sonic float" src="img/sonic.png" alt="">
-
     <div class="chrome-sub">youtube → mp3 direct link</div>
 
     <hr class="thin">
@@ -219,6 +197,67 @@
     document.getElementById('urlInput').addEventListener('keydown', function(e) {
         if (e.key === 'Enter') process();
     });
+
+    // ===== АВТО-ДЕКОР: картинки берутся из img/images.json =====
+    // "безопасные" места вокруг карточки, чтобы не перекрывать текст
+    const decoSlots = [
+        { top: '3%',  left: '4%' },
+        { top: '3%',  right: '4%' },
+        { top: '3%',  left: '42%' },
+        { top: '18%', left: '1%' },
+        { top: '18%', right: '1%' },
+        { top: '38%', left: '2%' },
+        { top: '38%', right: '2%' },
+        { top: '58%', left: '1%' },
+        { top: '58%', right: '1%' },
+        { top: '75%', left: '3%' },
+        { top: '75%', right: '3%' },
+        { bottom: '3%', left: '5%' },
+        { bottom: '3%', right: '5%' },
+        { bottom: '3%', left: '40%' },
+        { top: '48%', left: '3%' },
+        { top: '48%', right: '3%' }
+    ];
+
+    function shuffle(arr) {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    async function loadDecorations() {
+        try {
+            const res = await fetch('img/images.json');
+            if (!res.ok) return;
+            const files = await res.json();
+            if (!Array.isArray(files) || files.length === 0) return;
+
+            const slots = shuffle(decoSlots);
+            const anims = ['float', 'spin'];
+
+            files.forEach((filename, i) => {
+                const slot = slots[i % slots.length];
+                const img = document.createElement('img');
+                img.src = 'img/' + filename;
+                img.alt = '';
+                img.className = 'deco ' + anims[i % anims.length];
+                img.style.width = (55 + Math.round(Math.random() * 45)) + 'px';
+                img.style.setProperty('--r', (Math.random() * 24 - 12) + 'deg');
+                if (slot.top) img.style.top = slot.top;
+                if (slot.bottom) img.style.bottom = slot.bottom;
+                if (slot.left) img.style.left = slot.left;
+                if (slot.right) img.style.right = slot.right;
+                document.body.appendChild(img);
+            });
+        } catch (e) {
+            // если images.json не найден — просто без декора
+        }
+    }
+    loadDecorations();
+    // ===== конец авто-декора =====
 
     async function process() {
         const urlInput = document.getElementById('urlInput');
