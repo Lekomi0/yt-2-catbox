@@ -20,20 +20,9 @@
                 const response = await fetch(apiUrl);
                 const data = await response.json();
 
-                if (!data.download) throw new Error('Не удалось получить MP3');
+                if (!data.link) throw new Error('Не удалось получить MP3');
 
-                const mp3Url = data.download;
-                const blob = await fetch(mp3Url).then(r => r.blob());
-                const formData = new FormData();
-                formData.append('reqtype', 'fileupload');
-                formData.append('fileToUpload', blob, 'audio.mp3');
-
-                const uploadRes = await fetch('https://catbox.moe/user/api.php', {
-                    method: 'POST',
-                    body: formData
-                });
-                const directLink = await uploadRes.text();
-
+                const directLink = data.link;
                 resultDiv.innerHTML = `✅ Готовая ссылка: <a href="${directLink}" target="_blank">${directLink}</a>`;
             } catch (err) {
                 resultDiv.textContent = '❌ Ошибка: ' + err.message;
