@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube → MP3</title>
+    <title>YouTube → MP3 для Bambooland</title>
     <style>
         * {
             box-sizing: border-box;
@@ -24,23 +24,25 @@
             background: #1e1e1e;
             border-radius: 24px;
             padding: 40px 32px;
-            max-width: 540px;
+            max-width: 620px;
             width: 100%;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
             border: 1px solid #2a2a2a;
-            transition: 0.3s;
         }
         h1 {
             color: #fff;
             font-weight: 600;
             font-size: 28px;
             letter-spacing: -0.5px;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
+        }
+        h1 span {
+            color: #ff3b3b;
         }
         .sub {
             color: #aaa;
             font-size: 14px;
-            margin-bottom: 28px;
+            margin-bottom: 24px;
             border-left: 3px solid #ff3b3b;
             padding-left: 12px;
         }
@@ -88,7 +90,7 @@
             transform: scale(0.94);
         }
         #result {
-            margin-top: 24px;
+            margin-top: 20px;
             padding: 16px 18px;
             border-radius: 16px;
             background: #151515;
@@ -98,6 +100,14 @@
             min-height: 60px;
             border: 1px solid #2a2a2a;
             transition: 0.3s;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+        }
+        #result .link {
+            flex: 1;
+            min-width: 150px;
         }
         #result a {
             color: #ff6b6b;
@@ -107,9 +117,66 @@
         #result a:hover {
             text-decoration: underline;
         }
+        .copy-btn {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #ddd;
+            padding: 6px 16px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .copy-btn:hover {
+            background: #3a3a3a;
+            border-color: #666;
+        }
+        .copy-btn.copied {
+            background: #2a5a2a;
+            border-color: #4a8a4a;
+            color: #8f8;
+        }
         .loading {
             color: #ffaa33;
             font-weight: 400;
+        }
+        .guide {
+            margin-top: 28px;
+            padding: 18px 20px;
+            background: #151515;
+            border-radius: 16px;
+            border: 1px solid #2a2a2a;
+        }
+        .guide h3 {
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .guide ol {
+            color: #bbb;
+            font-size: 14px;
+            padding-left: 20px;
+            line-height: 1.8;
+        }
+        .guide ol li {
+            margin-bottom: 4px;
+        }
+        .guide code {
+            background: #2a2a2a;
+            padding: 2px 8px;
+            border-radius: 6px;
+            color: #ffaa66;
+            font-size: 13px;
+            font-family: monospace;
+        }
+        .guide .note {
+            margin-top: 10px;
+            color: #888;
+            font-size: 13px;
+            border-top: 1px solid #2a2a2a;
+            padding-top: 12px;
         }
         .footer-note {
             margin-top: 20px;
@@ -123,23 +190,38 @@
 </head>
 <body>
     <div class="card">
-        <h1>🎵 YouTube → MP3</h1>
-        <div class="sub">Бесплатно · 128 kbps · без рекламы</div>
+        <h1>🎵 YouTube → <span>MP3</span></h1>
+        <div class="sub">Конвертер для сервера <strong>Bambooland</strong> · 320 kbps · бесплатно</div>
 
         <div class="input-group">
             <input id="urlInput" type="text" placeholder="Вставьте ссылку на YouTube" spellcheck="false">
-            <button onclick="process()">Скачать</button>
+            <button onclick="process()">Получить ссылку</button>
         </div>
 
-        <div id="result">Вставьте ссылку и нажмите «Скачать»</div>
+        <div id="result">
+            <span class="link">Вставьте ссылку и нажмите «Получить ссылку»</span>
+        </div>
+
+        <div class="guide">
+            <h3>📖 Как добавить музыку на Bambooland</h3>
+            <ol>
+                <li>Получите <strong>прямую ссылку</strong> на MP3 с этого сайта.</li>
+                <li>В игре откройте чат и введите:
+                    <br><code>/cd download "ссылка" "название-файла.mp3"</code>
+                    <br>— ссылку и название берите в кавычки.</li>
+                <li>Возьмите в руку <strong>пластинку</strong> и введите:
+                    <br><code>/cd create local "название-файла" "название-пластинки"</code>
+                    <br>— после этого на пластинке появится ваша музыка.</li>
+            </ol>
+            <div class="note">💡 Файл хранится на <strong>catbox.moe</strong>, ссылка действует постоянно. Название файла и пластинки можно придумать любое (на русском тоже работает).</div>
+        </div>
 
         <div class="footer-note">
-            Файл загружается на catbox.moe · ссылка действует неограниченно
+            Сделано для Bambooland · любая ссылка с YouTube → прямая MP3
         </div>
     </div>
 
     <script>
-        // Обработка Enter
         document.getElementById('urlInput').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') process();
         });
@@ -150,11 +232,11 @@
             const url = urlInput.value.trim();
 
             if (!url) {
-                resultDiv.innerHTML = '⚠️ Вставьте ссылку на YouTube';
+                resultDiv.innerHTML = '<span class="link">⚠️ Вставьте ссылку на YouTube</span>';
                 return;
             }
 
-            resultDiv.innerHTML = '<span class="loading">⏳ Конвертация… это может занять 15–30 секунд</span>';
+            resultDiv.innerHTML = '<span class="link loading">⏳ Конвертация… это может занять 15–30 секунд</span>';
 
             try {
                 const apiUrl = `https://yt2mp3-catbox.onrender.com/download?url=${encodeURIComponent(url)}`;
@@ -162,13 +244,32 @@
                 const data = await response.json();
 
                 if (data.link) {
-                    resultDiv.innerHTML = `✅ Готово! <a href="${data.link}" target="_blank">${data.link}</a>`;
+                    resultDiv.innerHTML = `
+                        <span class="link">✅ <a href="${data.link}" target="_blank">${data.link}</a></span>
+                        <button class="copy-btn" onclick="copyLink('${data.link}')">📋 Копировать</button>
+                    `;
                 } else {
-                    resultDiv.innerHTML = '❌ Ошибка: ' + (data.error || 'неизвестная проблема');
+                    resultDiv.innerHTML = '<span class="link">❌ Ошибка: ' + (data.error || 'неизвестная проблема') + '</span>';
                 }
             } catch (err) {
-                resultDiv.innerHTML = '❌ Ошибка: ' + err.message;
+                resultDiv.innerHTML = '<span class="link">❌ Ошибка: ' + err.message + '</span>';
             }
+        }
+
+        function copyLink(link) {
+            navigator.clipboard.writeText(link).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                if (btn) {
+                    btn.textContent = '✅ Скопировано';
+                    btn.classList.add('copied');
+                    setTimeout(() => {
+                        btn.textContent = '📋 Копировать';
+                        btn.classList.remove('copied');
+                    }, 2500);
+                }
+            }).catch(() => {
+                alert('Не удалось скопировать, скопируйте вручную');
+            });
         }
     </script>
 </body>
