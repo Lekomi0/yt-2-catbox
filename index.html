@@ -1,31 +1,173 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>YouTube → MP3 → Catbox</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube → MP3</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #0f0f0f;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .card {
+            background: #1e1e1e;
+            border-radius: 24px;
+            padding: 40px 32px;
+            max-width: 540px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+            border: 1px solid #2a2a2a;
+            transition: 0.3s;
+        }
+        h1 {
+            color: #fff;
+            font-weight: 600;
+            font-size: 28px;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+        .sub {
+            color: #aaa;
+            font-size: 14px;
+            margin-bottom: 28px;
+            border-left: 3px solid #ff3b3b;
+            padding-left: 12px;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .input-group input {
+            flex: 1;
+            min-width: 200px;
+            padding: 14px 18px;
+            border-radius: 40px;
+            border: 1px solid #333;
+            background: #2a2a2a;
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            transition: 0.2s;
+        }
+        .input-group input:focus {
+            border-color: #ff3b3b;
+            background: #222;
+        }
+        .input-group input::placeholder {
+            color: #777;
+        }
+        .input-group button {
+            padding: 14px 28px;
+            border-radius: 40px;
+            border: none;
+            background: #ff3b3b;
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .input-group button:hover {
+            background: #e03030;
+            transform: scale(0.97);
+        }
+        .input-group button:active {
+            transform: scale(0.94);
+        }
+        #result {
+            margin-top: 24px;
+            padding: 16px 18px;
+            border-radius: 16px;
+            background: #151515;
+            color: #ccc;
+            font-size: 14px;
+            word-break: break-all;
+            min-height: 60px;
+            border: 1px solid #2a2a2a;
+            transition: 0.3s;
+        }
+        #result a {
+            color: #ff6b6b;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        #result a:hover {
+            text-decoration: underline;
+        }
+        .loading {
+            color: #ffaa33;
+            font-weight: 400;
+        }
+        .footer-note {
+            margin-top: 20px;
+            color: #555;
+            font-size: 12px;
+            text-align: center;
+            border-top: 1px solid #2a2a2a;
+            padding-top: 16px;
+        }
+    </style>
 </head>
 <body>
-    <h1>YouTube → MP3 → Catbox</h1>
-    <input id="urlInput" type="text" placeholder="Вставьте ссылку на YouTube" size="50">
-    <button onclick="process()">Конвертировать</button>
-    <div id="result"></div>
+    <div class="card">
+        <h1>🎵 YouTube → MP3</h1>
+        <div class="sub">Бесплатно · 128 kbps · без рекламы</div>
+
+        <div class="input-group">
+            <input id="urlInput" type="text" placeholder="Вставьте ссылку на YouTube" spellcheck="false">
+            <button onclick="process()">Скачать</button>
+        </div>
+
+        <div id="result">Вставьте ссылку и нажмите «Скачать»</div>
+
+        <div class="footer-note">
+            Файл загружается на catbox.moe · ссылка действует неограниченно
+        </div>
+    </div>
 
     <script>
+        // Обработка Enter
+        document.getElementById('urlInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') process();
+        });
+
         async function process() {
-            const url = document.getElementById('urlInput').value;
+            const urlInput = document.getElementById('urlInput');
             const resultDiv = document.getElementById('result');
-            resultDiv.textContent = 'Загрузка...';
+            const url = urlInput.value.trim();
+
+            if (!url) {
+                resultDiv.innerHTML = '⚠️ Вставьте ссылку на YouTube';
+                return;
+            }
+
+            resultDiv.innerHTML = '<span class="loading">⏳ Конвертация… это может занять 15–30 секунд</span>';
 
             try {
                 const apiUrl = `https://yt2mp3-catbox.onrender.com/download?url=${encodeURIComponent(url)}`;
                 const response = await fetch(apiUrl);
                 const data = await response.json();
 
-                if (!data.link) throw new Error('Не удалось получить MP3');
-
-                const directLink = data.link;
-                resultDiv.innerHTML = `✅ Готовая ссылка: <a href="${directLink}" target="_blank">${directLink}</a>`;
+                if (data.link) {
+                    resultDiv.innerHTML = `✅ Готово! <a href="${data.link}" target="_blank">${data.link}</a>`;
+                } else {
+                    resultDiv.innerHTML = '❌ Ошибка: ' + (data.error || 'неизвестная проблема');
+                }
             } catch (err) {
-                resultDiv.textContent = '❌ Ошибка: ' + err.message;
+                resultDiv.innerHTML = '❌ Ошибка: ' + err.message;
             }
         }
     </script>
