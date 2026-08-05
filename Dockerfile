@@ -1,32 +1,17 @@
 FROM python:3.11-slim
 
-# Устанавливаем зависимости: curl, unzip, iptables, и для сборки (если понадобится)
-RUN apt-get update && apt-get install -y \
-    curl \
-    unzip \
-    iptables \
-    iproute2 \
-    net-tools \
-    && rm -rf /var/lib/apt/lists/*
+# Устанавливаем FFmpeg и curl (для проверки)
+RUN apt-get update && apt-get install -y ffmpeg curl && rm -rf /var/lib/apt/lists/*
 
-# Скачиваем официальный релиз Zapret (версия 1.10.0)
-WORKDIR /opt
-RUN curl -L -o zapret.zip "https://github.com/Flowseal/zapret-discord-youtube/archive/refs/tags/1.10.0.zip" \
-    && unzip zapret.zip \
-    && rm zapret.zip \
-    && mv zapret-discord-youtube-* zapret
-
-# Копируем конфигурационный файл (пример базовых настроек)
-# Можно создать свой config.txt или оставить дефолтный
-COPY zapret-config.txt /opt/zapret/config.txt
-
-# Устанавливаем рабочую директорию приложения
+# Копируем и устанавливаем зависимости Python
 WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
-# Устанавливаем Python-зависимости
-RUN pip install --no-cache-dir -r requirements.txt
+# Устанавливаем zapret из готового образа
+COPY --from=pirst/zsylx:latest /opt/zapret /opt/zapret
+COPY --from=pirst/zsylx:latest /usr/local/bin/zapret /usr/local/bin/zapret
 
-# Стартуем Zapret в фоне и затем Flask-приложение
-# Запускаем через bash, чтобы выполнить несколько команд
-CMD bash -c "cd /opt/zapret && ./zapret.sh --start && cd /app && python app.py"
+# Запускаем zapret в фоне и Flask-приложение
+CMD bash -c "zapret --daemon --mode=1 --port=1080 && python app.py"
