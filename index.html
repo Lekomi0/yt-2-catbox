@@ -199,7 +199,7 @@
         if (e.key === 'Enter') process();
     });
 
-    // ===== АВТО-ДЕКОР =====
+    // ===== АВТО-ДЕКОР с защитой от наложений =====
     function getForbiddenRect() {
         const el = document.querySelector('.page');
         const r = el.getBoundingClientRect();
@@ -247,21 +247,43 @@
             const forbidden = getForbiddenRect();
             let cells = shuffle(buildGrid(files.length, forbidden));
             const anims = ['float', 'spin'];
+            const padIn = 6;
 
             files.forEach((filename, i) => {
                 if (cells.length === 0) cells = shuffle(buildGrid(files.length, forbidden));
                 const cell = cells.pop();
 
-                // ★ НОВЫЙ РАЗБРОС РАЗМЕРОВ (увеличен в ~3 раза) ★
-                const size = Math.random() < 0.5
-                    ? 120 + Math.round(Math.random() * 80)   // 120..200
-                    : 180 + Math.round(Math.random() * 140); // 250..450
+                // Максимально допустимый размер внутри ячейки
+                const maxWidth = cell.w - padIn * 2;
+                const maxHeight = cell.h - padIn * 2;
+                const maxAllowed = Math.min(maxWidth, maxHeight);
 
-                const padIn = 6;
-                const maxX = Math.max(cell.w - size - padIn * 2, 0);
-                const maxY = Math.max(cell.h - size - padIn * 2, 0);
-                const x = cell.x0 + padIn + Math.random() * maxX;
-                const y = cell.y0 + padIn + Math.random() * maxY;
+                // Диапазоны размеров
+                const smallMin = 120, smallMax = 200;
+                const bigMin = 250, bigMax = 450;
+
+                let size;
+                if (Math.random() < 0.5) {
+                    // маленькая
+                    if (maxAllowed < smallMin) {
+                        size = maxAllowed;
+                    } else {
+                        size = smallMin + Math.round(Math.random() * Math.min(smallMax - smallMin, maxAllowed - smallMin));
+                    }
+                } else {
+                    // большая
+                    if (maxAllowed < bigMin) {
+                        size = maxAllowed;
+                    } else {
+                        size = bigMin + Math.round(Math.random() * Math.min(bigMax - bigMin, maxAllowed - bigMin));
+                    }
+                }
+
+                // Убедимся, что размер положительный
+                size = Math.max(1, size);
+
+                const x = cell.x0 + padIn + Math.random() * (cell.w - size - padIn * 2);
+                const y = cell.y0 + padIn + Math.random() * (cell.h - size - padIn * 2);
 
                 const img = document.createElement('img');
                 img.src = 'img/' + filename;
@@ -274,7 +296,7 @@
                 document.body.appendChild(img);
             });
         } catch (e) {
-            // если images.json не найден — просто без декора
+            // если images.json не найден — без декора
         }
     }
     window.addEventListener('load', loadDecorations);
