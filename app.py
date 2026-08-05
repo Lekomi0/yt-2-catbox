@@ -24,13 +24,6 @@ def download():
     # Пробуем два API по очереди
     apis = [
         {
-            "name": "vevioz",
-            "endpoint": "https://api.vevioz.com/api/button/mp3/",
-            "method": "GET",
-            "url_param": True,
-            "timeout": 60
-        },
-        {
             "name": "convert1s",
             "endpoint": "https://hub.convert1s.com/api/download",
             "method": "POST",
@@ -40,6 +33,13 @@ def download():
                 "output": {"type": "audio", "format": "mp3"},
                 "audio": {"bitrate": "320k"}
             },
+            "timeout": 60
+        },
+        {
+            "name": "vevioz",
+            "endpoint": "https://api.vevioz.com/api/button/mp3/",
+            "method": "GET",
+            "url_param": True,
             "timeout": 60
         }
     ]
@@ -56,29 +56,6 @@ def download():
                 continue
 
             data = resp.json()
-            # Для вевиоза
-            if 'download' in data and data['download']:
-                mp3_url = data['download']
-                logging.info(f"Got MP3 URL from {api['name']}: {mp3_url}")
-                # Скачиваем MP3
-                mp3_resp = requests.get(mp3_url, stream=True, timeout=60)
-                if mp3_resp.status_code != 200:
-                    continue
-                filename = f"audio_{uuid.uuid4().hex}.mp3"
-                with open(filename, 'wb') as f:
-                    for chunk in mp3_resp.iter_content(chunk_size=8192):
-                        f.write(chunk)
-                # Загружаем на Catbox
-                with open(filename, 'rb') as f:
-                    upload_resp = requests.post(
-                        'https://catbox.moe/user/api.php',
-                        data={'reqtype': 'fileupload'},
-                        files={'fileToUpload': f},
-                        timeout=30
-                    )
-                direct_link = upload_resp.text.strip()
-                os.remove(filename)
-                return jsonify({'link': direct_link})
 
             # Для convert1s
             if 'statusUrl' in data:
@@ -92,31 +69,63 @@ def download():
                     if 'downloadUrl' in status_data and status_data['downloadUrl']:
                         mp3_url = status_data['downloadUrl']
                         logging.info(f"Got MP3 URL from {api['name']}: {mp3_url}")
-                        # Скачиваем MP3
-                        mp3_resp = requests.get(mp3_url, stream=True, timeout=60)
-                        if mp3_resp.status_code != 200:
-                            continue
-                        filename = f"audio_{uuid.uuid4().hex}.mp3"
-                        with open(filename, 'wb') as f:
-                            for chunk in mp3_resp.iter_content(chunk_size=8192):
-                                f.write(chunk)
-                        with open(filename, 'rb') as f:
-                            upload_resp = requests.post(
-                                'https://catbox.moe/user/api.php',
-                                data={'reqtype': 'fileupload'},
-                                files={'fileToUpload': f},
-                                timeout=30
-                            )
-                        direct_link = upload_resp.text.strip()
-                        os.remove(filename)
-                        return jsonify({'link': direct_link})
+                        return process_mp3(mp3_url)
                     if status_data.get('status') == 'error' or status_data.get('state') == 'error':
                         break
+
+            # Для вевиоза
+            if 'download' in data and data['download']:
+                mp3_url = data['download']
+                logging.info(f"Got MP3 URL from {api['name']}: {mp3_url}")
+                return process_mp3(mp3_url)
+
         except Exception as e:
             logging.error(f"API {api['name']} error: {str(e)}")
             continue
 
     return jsonify({'error': 'All APIs failed'}), 500
+
+def process_mp3(mp3_url):
+    """Скачивает MP3 и загружает на Catbox"""
+    try:
+        logging.info("Downloading MP3...")
+        # Увеличенный таймаут на скачивание
+        mp3_resp = requests.get(mp3_url, stream=True, timeout=120)
+        if mp3_resp.status_code != 200:
+            logging.error(f"Failed to download MP3: {mp3_resp.status_code}")
+            return jsonify({'error': 'Failed to download MP3'}), 500
+
+        filename = f"audio_{uuid.uuid4().hex}.mp3"
+        with open(filename, 'wb') as f:
+            for chunk in mp3_resp.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+        logging.info("MP3 downloaded successfully")
+
+        logging.info("Uploading to Catbox...")
+        with open(filename, 'rb') as f:
+            upload_resp = requests.post(
+                'https://catbox.moe/user/api.php',
+                data={'reqtype': 'fileupload'},
+                files={'fileToUpload': f},
+                timeout=60
+            )
+        if upload_resp.status_code != 200:
+            logging.error(f"Catbox upload failed: {upload_resp.status_code}")
+            os.remove(filename)
+            return jsonify({'error': 'Catbox upload failed'}), 500
+
+        direct_link = upload_resp.text.strip()
+        os.remove(filename)
+        logging.info(f"Uploaded to Catbox: {direct_link}")
+        return jsonify({'link': direct_link})
+
+    except requests.exceptions.Timeout:
+        logging.error("Timeout during MP3 download or upload")
+        return jsonify({'error': 'Request timeout'}), 500
+    except Exception as e:
+        logging.error(f"Error in process_mp3: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
