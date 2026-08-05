@@ -3,287 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube → MP3</title>
+    <title>YouTube Link</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        html, body {
-            overflow-x: hidden;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { overflow-x: hidden; }
+
         body {
-            background: #0f0f0f;
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            background-color: #ff1464;
+            background-image:
+                repeating-linear-gradient(0deg, #e01158 0 1px, transparent 1px 40px),
+                repeating-linear-gradient(90deg, #e01158 0 1px, transparent 1px 40px),
+                radial-gradient(circle at 10px 10px, #ff4d8a 3px, transparent 4px);
+            background-size: 40px 40px, 40px 40px, 40px 40px;
+            font-family: Verdana, Arial, sans-serif;
             display: flex;
             justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            position: relative;
+            padding: 40px 16px;
         }
 
-        /* декоративные картинки */
-        .deco {
-            position: absolute;
-            pointer-events: none;
-            z-index: 0;
-            opacity: 0.9;
-            filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6));
-        }
-        @keyframes floaty {
-            0%   { transform: translateY(0px) rotate(var(--r, 0deg)); }
-            50%  { transform: translateY(-14px) rotate(var(--r, 0deg)); }
-            100% { transform: translateY(0px) rotate(var(--r, 0deg)); }
-        }
-        @keyframes spinny {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        .float { animation: floaty 4.5s ease-in-out infinite; }
-        .spin { animation: spinny 6s linear infinite; }
-
-        .deco.smoke   { top: 4%;   left: 6%;   width: 90px;  --r: -8deg; }
-        .deco.puzzle  { top: 8%;   right: 5%;  width: 80px;  --r: 10deg; }
-        .deco.pikachu { bottom: 6%; left: 4%;  width: 100px; }
-        .deco.biohazard { top: 42%; left: 1%;  width: 70px; }
-        .deco.pony    { bottom: 10%; right: 4%; width: 100px; --r: -6deg; }
-        .deco.fist    { top: 2%;   left: 42%;  width: 70px;  --r: 4deg; }
-        .deco.butterfly { bottom: 30%; left: 12%; width: 90px; }
-        .deco.lekomi  { top: 46%; right: 2%;   width: 130px; }
-        .deco.cowboy  { top: 68%; left: 1%;    width: 90px; }
-        .deco.dance_blue { bottom: 2%; left: 38%; width: 90px; }
-        .deco.dance_shadow { top: 20%; right: 1%; width: 80px; }
-        .deco.leaf    { bottom: 40%; right: 10%; width: 80px; --r: 15deg; }
-        .deco.sonic   { top: 12%; left: 20%;  width: 110px; }
-        .deco.cool    { bottom: 4%; right: 30%; width: 140px; }
-
-        .card {
-            background: #1e1e1e;
-            border-radius: 24px;
-            padding: 40px 32px;
-            max-width: 560px;
+        .page {
+            max-width: 620px;
             width: 100%;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
-            border: 1px solid #2a2a2a;
-            position: relative;
-            z-index: 1;
         }
-        h1 {
+
+        .chrome-sub {
+            text-align: center;
             color: #fff;
-            font-weight: 600;
-            font-size: 28px;
-            letter-spacing: -0.5px;
-            margin-bottom: 4px;
+            font-size: 12px;
+            letter-spacing: 1px;
+            margin-bottom: 26px;
+            text-transform: uppercase;
+            margin-top: 10px;
         }
-        h1 span {
-            color: #ff3b3b;
+
+        hr.thin {
+            border: none;
+            height: 1px;
+            background: #b30d45;
+            box-shadow: 0 1px 0 #ff6fa3;
+            margin: 18px 0;
         }
-        .sub {
-            color: #aaa;
-            font-size: 14px;
-            margin-bottom: 24px;
-            border-left: 3px solid #ff3b3b;
-            padding-left: 12px;
+
+        .converter-box {
+            max-width: 420px;
+            margin: 24px auto;
+            background: #d8d8d8;
+            border: 2px outset #fff;
+            padding: 18px;
+        }
+        .converter-box .title {
+            text-align: center;
+            font-weight: bold;
+            color: #003399;
+            background: linear-gradient(180deg, #fff, #b8c8e8);
+            border: 1px solid #6699cc;
+            padding: 4px;
+            font-size: 13px;
+            margin-bottom: 12px;
         }
         .input-group {
             display: flex;
-            gap: 10px;
+            gap: 6px;
             flex-wrap: wrap;
         }
         .input-group input {
             flex: 1;
-            min-width: 200px;
-            padding: 14px 18px;
-            border-radius: 40px;
-            border: 1px solid #333;
-            background: #2a2a2a;
-            color: #fff;
-            font-size: 15px;
-            outline: none;
-            transition: 0.2s;
-        }
-        .input-group input:focus {
-            border-color: #ff3b3b;
-            background: #222;
-        }
-        .input-group input::placeholder {
-            color: #777;
+            min-width: 180px;
+            padding: 5px 7px;
+            border: 1px inset #808080;
+            font-size: 12px;
+            font-family: Verdana, sans-serif;
         }
         .input-group button {
-            padding: 14px 28px;
-            border-radius: 40px;
-            border: none;
-            background: #ff3b3b;
-            color: #fff;
-            font-weight: 600;
-            font-size: 15px;
+            padding: 5px 16px;
+            border: 1px outset #d4d0c8;
+            background: #d4d0c8;
+            font-size: 12px;
+            font-weight: bold;
             cursor: pointer;
-            transition: 0.2s;
-            white-space: nowrap;
         }
-        .input-group button:hover {
-            background: #e03030;
-            transform: scale(0.97);
-        }
-        .input-group button:active {
-            transform: scale(0.94);
-        }
+        .input-group button:active { border-style: inset; }
+
         #result {
-            margin-top: 20px;
-            padding: 16px 18px;
-            border-radius: 16px;
-            background: #151515;
-            color: #ccc;
-            font-size: 14px;
+            margin-top: 10px;
+            padding: 8px 10px;
+            background: #000;
+            color: #0f0;
+            font-family: "Courier New", monospace;
+            font-size: 12px;
             word-break: break-all;
-            min-height: 60px;
-            border: 1px solid #2a2a2a;
-            transition: 0.3s;
+            min-height: 36px;
+            border: 1px inset #808080;
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
         }
-        #result .link {
-            flex: 1;
-            min-width: 150px;
-        }
-        #result a {
-            color: #ff6b6b;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        #result a:hover {
-            text-decoration: underline;
-        }
+        #result a { color: #0ff; }
         .copy-btn {
-            background: #2a2a2a;
-            border: 1px solid #444;
-            color: #ddd;
-            padding: 6px 16px;
-            border-radius: 40px;
+            border: 1px outset #d4d0c8;
+            background: #d4d0c8;
+            padding: 3px 10px;
+            font-size: 11px;
             cursor: pointer;
-            font-size: 13px;
-            transition: 0.2s;
-            white-space: nowrap;
         }
-        .copy-btn:hover {
-            background: #3a3a3a;
-            border-color: #666;
-        }
-        .copy-btn.copied {
-            background: #2a5a2a;
-            border-color: #4a8a4a;
-            color: #8f8;
-        }
-        .loading {
-            color: #ffaa33;
-            font-weight: 400;
-        }
-        .footer-note {
-            margin-top: 28px;
-            color: #555;
-            font-size: 12px;
-            text-align: center;
-            border-top: 1px solid #2a2a2a;
-            padding-top: 16px;
-        }
+        .copy-btn:active { border-style: inset; }
+        .copy-btn.copied { background: #90ee90; }
+        .loading { color: #cc7a00; }
 
-        @media (max-width: 900px) {
-            .deco { display: none; }
+        .linklist {
+            list-style: none;
+            font-size: 13px;
+            margin: 16px 0;
         }
+        .linklist li {
+            padding: 4px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .linklist .globe {
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: conic-gradient(#2a7, #274 25%, #2a7 50%, #274 75%, #2a7);
+            border: 1px solid #143;
+            flex-shrink: 0;
+        }
+        .linklist a { color: #fff; text-decoration: underline; }
+        .linklist a:visited { color: #ffd6e6; }
+
+        .footer {
+            text-align: center;
+            font-size: 11px;
+            color: #ffd6e6;
+            margin-top: 26px;
+            border-top: 1px solid #e01158;
+            padding-top: 10px;
+        }
+        .footer a { color: #fff; }
     </style>
 </head>
 <body>
+<div class="page">
 
-    <!-- рандомно раскиданные картинки/гифки -->
-    <img class="deco smoke float" src="img/smoke_emoji.png" alt="">
-    <img class="deco puzzle spin" src="img/puzzle.png" alt="">
-    <img class="deco pikachu float" src="img/pikachu.gif" alt="">
-    <img class="deco biohazard spin" src="img/biohazard.gif" alt="">
-    <img class="deco pony float" src="img/pony.png" alt="">
-    <img class="deco fist float" src="img/fist.jpg" alt="">
-    <img class="deco butterfly float" src="img/butterfly.gif" alt="">
-    <img class="deco lekomi float" src="img/lekomi.gif" alt="">
-    <img class="deco cowboy float" src="img/cowboy.gif" alt="">
-    <img class="deco dance_blue float" src="img/dance_blue.gif" alt="">
-    <img class="deco dance_shadow float" src="img/dance_shadow.gif" alt="">
-    <img class="deco leaf float" src="img/leaf.png" alt="">
-    <img class="deco sonic float" src="img/sonic.png" alt="">
-    <img class="deco cool float" src="img/cool.png" alt="">
+    <div class="chrome-sub">youtube → mp3 direct link</div>
 
-    <div class="card">
-        <h1>🎵 YouTube → <span>MP3</span></h1>
-        <div class="sub">Конвертер видео в аудио · 320 kbps · бесплатно</div>
+    <hr class="thin">
 
+    <div class="converter-box">
+        <div class="title">★ вставь ссылку на YouTube ★</div>
         <div class="input-group">
-            <input id="urlInput" type="text" placeholder="Вставьте ссылку на YouTube" spellcheck="false">
-            <button onclick="process()">Получить ссылку</button>
+            <input id="urlInput" type="text" placeholder="ссылка на YouTube" spellcheck="false">
+            <button onclick="process()">Enter</button>
         </div>
-
         <div id="result">
-            <span class="link">Вставьте ссылку и нажмите «Получить ссылку»</span>
-        </div>
-
-        <div class="footer-note">
-            Любая ссылка с YouTube → прямая ссылка на MP3<br>
-            Файл хранится на catbox.moe · ссылка действует постоянно
+            <span class="link">&gt; ожидание ссылки...</span>
         </div>
     </div>
 
-    <script>
-        document.getElementById('urlInput').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') process();
+    <hr class="thin">
+
+    <ul class="linklist">
+        <li><span class="globe"></span> <a href="#">вставь ссылку на YouTube</a></li>
+        <li><span class="globe"></span> <a href="#">получи прямую ссылку на mp3</a></li>
+        <li><span class="globe"></span> <a href="#">файл хранится на catbox.moe навсегда</a></li>
+    </ul>
+
+    <div class="footer">
+        Copyright © 2026, lekomi's page
+    </div>
+
+</div>
+
+<script>
+    document.getElementById('urlInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') process();
+    });
+
+    async function process() {
+        const urlInput = document.getElementById('urlInput');
+        const resultDiv = document.getElementById('result');
+        const url = urlInput.value.trim();
+
+        if (!url) {
+            resultDiv.innerHTML = '<span class="link">⚠️ вставь ссылку на YouTube</span>';
+            return;
+        }
+
+        resultDiv.innerHTML = '<span class="link loading">⏳ секунду...</span>';
+
+        try {
+            const apiUrl = `https://yt2mp3-catbox.onrender.com/download?url=${encodeURIComponent(url)}`;
+            const response = await fetch(apiUrl);
+            const data = await response.json();
+
+            if (data.link) {
+                resultDiv.innerHTML = `
+                    <span class="link">✅ <a href="${data.link}" target="_blank">${data.link}</a></span>
+                    <button class="copy-btn" onclick="copyLink('${data.link}')">копировать</button>
+                `;
+            } else {
+                resultDiv.innerHTML = '<span class="link">❌ ошибка: ' + (data.error || 'неизвестная проблема') + '</span>';
+            }
+        } catch (err) {
+            resultDiv.innerHTML = '<span class="link">❌ ошибка: ' + err.message + '</span>';
+        }
+    }
+
+    function copyLink(link) {
+        navigator.clipboard.writeText(link).then(() => {
+            const btn = document.querySelector('.copy-btn');
+            if (btn) {
+                btn.textContent = '✅ скопировано';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = 'копировать';
+                    btn.classList.remove('copied');
+                }, 2500);
+            }
+        }).catch(() => {
+            alert('не удалось скопировать, скопируйте вручную');
         });
-
-        async function process() {
-            const urlInput = document.getElementById('urlInput');
-            const resultDiv = document.getElementById('result');
-            const url = urlInput.value.trim();
-
-            if (!url) {
-                resultDiv.innerHTML = '<span class="link">⚠️ Вставьте ссылку на YouTube</span>';
-                return;
-            }
-
-            resultDiv.innerHTML = '<span class="link loading">⏳ Конвертация… это может занять 15–30 секунд</span>';
-
-            try {
-                const apiUrl = `https://yt2mp3-catbox.onrender.com/download?url=${encodeURIComponent(url)}`;
-                const response = await fetch(apiUrl);
-                const data = await response.json();
-
-                if (data.link) {
-                    resultDiv.innerHTML = `
-                        <span class="link">✅ <a href="${data.link}" target="_blank">${data.link}</a></span>
-                        <button class="copy-btn" onclick="copyLink('${data.link}')">📋 Копировать</button>
-                    `;
-                } else {
-                    resultDiv.innerHTML = '<span class="link">❌ Ошибка: ' + (data.error || 'неизвестная проблема') + '</span>';
-                }
-            } catch (err) {
-                resultDiv.innerHTML = '<span class="link">❌ Ошибка: ' + err.message + '</span>';
-            }
-        }
-
-        function copyLink(link) {
-            navigator.clipboard.writeText(link).then(() => {
-                const btn = document.querySelector('.copy-btn');
-                if (btn) {
-                    btn.textContent = '✅ Скопировано';
-                    btn.classList.add('copied');
-                    setTimeout(() => {
-                        btn.textContent = '📋 Копировать';
-                        btn.classList.remove('copied');
-                    }, 2500);
-                }
-            }).catch(() => {
-                alert('Не удалось скопировать, скопируйте вручную');
-            });
-        }
-    </script>
+    }
+</script>
 </body>
 </html>
