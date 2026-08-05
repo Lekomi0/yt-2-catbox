@@ -1,15 +1,8 @@
 FROM python:3.11-slim
 
-# Устанавливаем зависимости для сборки и работы
 RUN apt-get update && apt-get install -y \
-    git \
-    build-essential \
-    autoconf \
-    automake \
-    libtool \
-    pkg-config \
-    libnet1-dev \
-    libpcap0.8-dev \
+    wget \
+    unzip \
     iptables \
     iproute2 \
     net-tools \
@@ -17,21 +10,18 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
-# Клонируем репозиторий zapret-discord-youtube
-WORKDIR /opt
-RUN git clone https://github.com/Flowseal/zapret-discord-youtube.git zapret
+# Скачиваем бинарник zapret с релизов (используем wget с правильными заголовками)
+RUN wget --header="Accept: application/octet-stream" \
+         --header="User-Agent: Mozilla/5.0" \
+         -O /tmp/zapret.zip \
+         https://github.com/Flowseal/zapret-discord-youtube/releases/download/1.10.0/zapret-1.10.0.zip \
+    && unzip /tmp/zapret.zip -d /tmp/ \
+    && cp /tmp/zapret-1.10.0/bin/zapret /usr/local/bin/ \
+    && chmod +x /usr/local/bin/zapret \
+    && rm -rf /tmp/zapret.zip /tmp/zapret-1.10.0
 
-# Собираем zapret из исходников
-WORKDIR /opt/zapret
-RUN make -C src -j$(nproc) && \
-    make -C src install
-
-# Копируем приложение
 WORKDIR /app
 COPY . .
-
-# Устанавливаем Python-зависимости
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Запускаем zapret в фоне (режим 1, порт 1080) и Flask
 CMD bash -c "/usr/local/bin/zapret --mode=1 --port=1080 & sleep 3 && python app.py"
