@@ -18,13 +18,14 @@ def download():
     try:
         # Скачиваем и конвертируем видео в MP3 с помощью yt-dlp
         subprocess.run([
-            "yt-dlp",
-            "-x",                # Извлечь аудио
-            "--audio-format", "mp3",
-            "--audio-quality", "0",  # Лучшее качество
-            "-o", filename,
-            url
-        ], check=True, timeout=300)  # Таймаут 5 минут
+    "yt-dlp",
+    "--cookies", "cookies.txt",   # <-- ЭТА НОВАЯ СТРОКА
+    "-x",
+    "--audio-format", "mp3",
+    "--audio-quality", "0",
+    "-o", filename,
+    url
+], check=True, timeout=300)
 
         # Загружаем получившийся файл на Catbox
         with open(filename, 'rb') as f:
