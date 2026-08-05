@@ -26,14 +26,15 @@ def download():
             return jsonify({'error': f'Converter error {response.status_code}'}), 500
 
         html = response.text
+        download_link = None  # <-- ИНИЦИАЛИЗАЦИЯ
 
-        # 2. Ищем ссылку по паттерну, который ты нашёл в F12
+        # 2. Ищем ссылку по паттерну (из твоего F12)
         pattern = r'https://vps-[^/]+\.mnmnmnmnmnnm\.site/files/[^/]+/output\.mp3\?token=[^&\s]+&expires=\d+'
         match = re.search(pattern, html)
         if match:
             download_link = match.group(0)
         else:
-            # Если не нашлось — пробуем искать в тегах <a> с href, содержащим .mp3
+            # Если не нашлось — ищем в <a> с .mp3
             soup = BeautifulSoup(html, 'html.parser')
             for a in soup.find_all('a', href=True):
                 if '.mp3' in a['href']:
@@ -42,9 +43,8 @@ def download():
                         download_link = 'https://media.ytmp3.gg' + download_link
                     break
             else:
-                # Ищем в любых скриптах
-                scripts = soup.find_all('script')
-                for script in scripts:
+                # Ищем в скриптах
+                for script in soup.find_all('script'):
                     if script.string:
                         match = re.search(pattern, script.string)
                         if match:
