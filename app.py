@@ -1,12 +1,12 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS  # <-- НОВЫЙ ИМПОРТ
+from flask_cors import CORS  
 import requests
 import uuid
 import os
 import time
 
 app = Flask(__name__)
-CORS(app)  # <-- РАЗРЕШАЕТ ЗАПРОСЫ С ЛЮБОГО ДОМЕНА
+CORS(app)  
 
 @app.route('/download', methods=['GET', 'OPTIONS'])
 def download():
