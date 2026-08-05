@@ -10,18 +10,16 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
-# Скачиваем бинарник zapret с релизов (используем wget с правильными заголовками)
-RUN wget --header="Accept: application/octet-stream" \
-         --header="User-Agent: Mozilla/5.0" \
-         -O /tmp/zapret.zip \
-         https://github.com/Flowseal/zapret-discord-youtube/releases/download/1.10.0/zapret-1.10.0.zip \
+# Скачиваем последнюю стабильную версию оригинального zapret
+RUN wget -O /tmp/zapret.zip https://github.com/bol-van/zapret/releases/latest/download/zapret-linux.zip \
     && unzip /tmp/zapret.zip -d /tmp/ \
-    && cp /tmp/zapret-1.10.0/bin/zapret /usr/local/bin/ \
-    && chmod +x /usr/local/bin/zapret \
-    && rm -rf /tmp/zapret.zip /tmp/zapret-1.10.0
+    && cp /tmp/zapret-linux/nfqws /usr/local/bin/ \
+    && chmod +x /usr/local/bin/nfqws \
+    && rm -rf /tmp/zapret.zip /tmp/zapret-linux
 
 WORKDIR /app
 COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD bash -c "/usr/local/bin/zapret --mode=1 --port=1080 & sleep 3 && python app.py"
+# Запускаем nfqws (основной инструмент zapret) в фоне и Flask
+CMD bash -c "/usr/local/bin/nfqws --filter-tcp=80,443 --filter-udp=443 --dpi-desync=fake --dpi-desync-ttl=5 & sleep 3 && python app.py"
