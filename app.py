@@ -12,22 +12,36 @@ def download():
     if not url:
         return jsonify({'error': 'Missing url parameter'}), 400
 
-    # Генерируем уникальное имя для файла, чтобы не было конфликтов
     filename = f"audio_{uuid.uuid4().hex}.mp3"
 
     try:
-        # Скачиваем и конвертируем видео в MP3 с помощью yt-dlp
-        subprocess.run([
-    "yt-dlp",
-    "--cookies", "cookies.txt",   # <-- ЭТА НОВАЯ СТРОКА
-    "-x",
-    "--audio-format", "mp3",
-    "--audio-quality", "0",
-    "-o", filename,
-    url
-], check=True, timeout=300)
+        # Проверим, существует ли файл cookies.txt
+        if os.path.exists('cookies.txt'):
+            cookie_arg = ['--cookies', 'cookies.txt']
+        else:
+            cookie_arg = []
+            print("WARNING: cookies.txt not found, proceeding without")
 
-        # Загружаем получившийся файл на Catbox
+        cmd = [
+            "yt-dlp",
+            *cookie_arg,
+            "-x",
+            "--audio-format", "mp3",
+            "--audio-quality", "0",
+            "--extractor-args", "youtube:player-client=android",  # добавляем обход
+            "-o", filename,
+            url
+        ]
+
+        # Запускаем с захватом вывода
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+
+        if result.returncode != 0:
+            # Возвращаем подробную ошибку
+            error_message = result.stderr.strip() or result.stdout.strip()
+            return jsonify({'error': f'yt-dlp failed: {error_message}'}), 500
+
+        # Если успешно — загружаем на Catbox
         with open(filename, 'rb') as f:
             response = requests.post(
                 'https://catbox.moe/user/api.php',
@@ -35,16 +49,11 @@ def download():
                 files={'fileToUpload': f}
             )
         direct_link = response.text.strip()
-
-        # Удаляем файл с сервера
         os.remove(filename)
-
         return jsonify({'link': direct_link})
 
     except subprocess.TimeoutExpired:
         return jsonify({'error': 'Conversion timed out'}), 500
-    except subprocess.CalledProcessError as e:
-        return jsonify({'error': f'yt-dlp failed: {str(e)}'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
