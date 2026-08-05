@@ -6,7 +6,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN pip install flask requests yt-dlp
+RUN pip install -r requirements.txt
 
 EXPOSE 8080
 
