@@ -1,0 +1,4 @@
+# Конфиг для zapret
+--mode=1
+--ipset=/opt/zapret/ipset.txt
+--port=1080
