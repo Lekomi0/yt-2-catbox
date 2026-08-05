@@ -11,10 +11,10 @@ RUN apt-get update && apt-get install -y \
 
 # Скачиваем официальный релиз Zapret (версия 1.10.0)
 WORKDIR /opt
-RUN curl -L -o zapret.zip https://github.com/Flowseal/zapret-discord-youtube/releases/download/1.10.0/zapret-1.10.0.zip \
+RUN curl -L -o zapret.zip "https://github.com/Flowseal/zapret-discord-youtube/archive/refs/tags/1.10.0.zip" \
     && unzip zapret.zip \
     && rm zapret.zip \
-    && mv zapret-* zapret
+    && mv zapret-discord-youtube-* zapret
 
 # Копируем конфигурационный файл (пример базовых настроек)
 # Можно создать свой config.txt или оставить дефолтный
