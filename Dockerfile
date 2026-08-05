@@ -1,27 +1,27 @@
 FROM python:3.11-slim
 
-# Устанавливаем зависимости
+# Устанавливаем системные зависимости
 RUN apt-get update && apt-get install -y \
-    curl \
-    unzip \
     iptables \
     iproute2 \
     net-tools \
+    curl \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
-# Скачиваем бинарник zapret с GitHub Releases (прямая ссылка)
-RUN curl -L -H "Accept: application/octet-stream" -o /tmp/zapret.zip \
-    https://github.com/Flowseal/zapret-discord-youtube/releases/download/1.10.0/zapret-1.10.0.zip \
-    && unzip /tmp/zapret.zip -d /tmp/ \
-    && cp /tmp/zapret-1.10.0/bin/zapret /usr/local/bin/ \
-    && chmod +x /usr/local/bin/zapret \
-    && rm -rf /tmp/zapret.zip /tmp/zapret-1.10.0
+# Копируем бинарник zapret из готового образа (содержит всё: сам zapret + зависимости)
+COPY --from=ghcr.io/sergeydigl3/zapret-discord-youtube-linux:latest /usr/local/bin/zapret /usr/local/bin/zapret
+COPY --from=ghcr.io/sergeydigl3/zapret-discord-youtube-linux:latest /usr/local/bin/zapret /usr/local/bin/
+# Если нужны дополнительные файлы (например, конфиги), можно скопировать и их
+# COPY --from=ghcr.io/sergeydigl3/zapret-discord-youtube-linux:latest /etc/zapret /etc/zapret
+
+# Делаем исполняемым
+RUN chmod +x /usr/local/bin/zapret
 
 WORKDIR /app
 COPY . .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Запускаем zapret в фоне и Flask-приложение
+# Запускаем zapret в фоне (режим 1, порт 1080) и затем Flask
 CMD bash -c "/usr/local/bin/zapret --mode=1 --port=1080 & sleep 3 && python app.py"
