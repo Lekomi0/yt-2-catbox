@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Link</title>
+    <title>YouTube → MP3</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { overflow-x: hidden; }
@@ -162,11 +162,11 @@
         .footer a { color: #fff; }
 
         html, body {
-    overflow: hidden;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-}
+            overflow: hidden;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
     </style>
 </head>
 <body>
@@ -190,9 +190,9 @@
     <hr class="thin">
 
     <ul class="linklist">
-        <li><span class="globe"></span> <a href="#">вставь ссылку на YouTube</a></li>
-        <li><span class="globe"></span> <a href="#">получи прямую ссылку на mp3</a></li>
-        <li><span class="globe"></span> <a href="#">файл хранится на catbox.moe навсегда</a></li>
+        <li><span class="globe"></span> вставь ссылку на YouTube</li>
+        <li><span class="globe"></span> получи прямую ссылку на MP3</li>
+        <li><span class="globe"></span> ссылка работает ~1 час</li>
     </ul>
 
     <div class="footer">
@@ -260,25 +260,21 @@
                 if (cells.length === 0) cells = shuffle(buildGrid(files.length, forbidden));
                 const cell = cells.pop();
 
-                // Максимально допустимый размер внутри ячейки
                 const maxWidth = cell.w - padIn * 2;
                 const maxHeight = cell.h - padIn * 2;
                 const maxAllowed = Math.min(maxWidth, maxHeight);
 
-                // Диапазоны размеров
                 const smallMin = 120, smallMax = 200;
                 const bigMin = 250, bigMax = 450;
 
                 let size;
                 if (Math.random() < 0.5) {
-                    // маленькая
                     if (maxAllowed < smallMin) {
                         size = maxAllowed;
                     } else {
                         size = smallMin + Math.round(Math.random() * Math.min(smallMax - smallMin, maxAllowed - smallMin));
                     }
                 } else {
-                    // большая
                     if (maxAllowed < bigMin) {
                         size = maxAllowed;
                     } else {
@@ -286,7 +282,6 @@
                     }
                 }
 
-                // Убедимся, что размер положительный
                 size = Math.max(1, size);
 
                 const x = cell.x0 + padIn + Math.random() * (cell.w - size - padIn * 2);
