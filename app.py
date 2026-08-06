@@ -8,6 +8,30 @@ app = Flask(__name__)
 CORS(app)
 logging.basicConfig(level=logging.INFO)
 
+def shorten_url(long_url):
+    """
+    Сокращает ссылку через API clck.ru.
+    """
+    try:
+        # API clck.ru не требует ключа. Просто отправляем GET-запрос.
+        # Документация: https://clck.ru/--?url=ДЛИННАЯ_ССЫЛКА
+        short_api_url = f"https://clck.ru/--?url={long_url}"
+        response = requests.get(short_api_url, timeout=10)
+        
+        if response.status_code == 200:
+            # API возвращает просто текст с короткой ссылкой
+            short_url = response.text.strip()
+            logging.info(f"Ссылка сокращена: {short_url}")
+            return short_url
+        else:
+            logging.warning(f"Не удалось сократить ссылку, статус: {response.status_code}")
+            # Если не удалось сократить, возвращаем исходную длинную ссылку
+            return long_url
+    except Exception as e:
+        logging.error(f"Ошибка при сокращении ссылки: {e}")
+        # В случае любой ошибки возвращаем исходную ссылку
+        return long_url
+
 @app.route('/download', methods=['GET', 'OPTIONS'])
 def download():
     if request.method == 'OPTIONS':
@@ -17,10 +41,9 @@ def download():
     if not url:
         return jsonify({'error': 'Missing url parameter'}), 400
 
-    logging.info(f"Received URL: {url}")
+    logging.info(f"Получен URL: {url}")
 
     try:
-        # Используем только convert1s
         headers = {
             'accept': 'application/json',
             'content-type': 'application/json',
@@ -52,10 +75,13 @@ def download():
                 continue
             status_data = status_resp.json()
             if 'downloadUrl' in status_data and status_data['downloadUrl']:
-                mp3_url = status_data['downloadUrl']
-                logging.info(f"Got direct MP3 URL: {mp3_url}")
-                # Возвращаем ссылку как есть
-                return jsonify({'link': mp3_url})
+                long_mp3_url = status_data['downloadUrl']
+                logging.info(f"Получена длинная ссылка на MP3: {long_mp3_url}")
+                
+                # --- НОВЫЙ ШАГ: сокращаем ссылку ---
+                short_mp3_url = shorten_url(long_mp3_url)
+                # Возвращаем уже короткую ссылку
+                return jsonify({'link': short_mp3_url})
             if status_data.get('status') == 'error' or status_data.get('state') == 'error':
                 break
 
